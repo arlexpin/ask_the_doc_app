@@ -13,7 +13,7 @@ import os
 st.set_page_config(
     page_title='🦜🔗 Ask the Doc App - Enhanced',
     page_icon='📚',
-    layout='wide',
+    layout='centered',
     initial_sidebar_state='expanded'
 )
 
@@ -21,28 +21,59 @@ st.set_page_config(
 st.markdown("""
 <style>
     .main-header {
-        font-size: 3rem;
+        font-size: 2.5rem;
         color: #1f77b4;
         text-align: center;
         margin-bottom: 2rem;
+    }
+    .section-header {
+        font-size: 1.8rem;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #3498db;
     }
     .info-box {
         background-color: #f0f2f6;
         padding: 1rem;
         border-radius: 0.5rem;
         border-left: 4px solid #1f77b4;
+        margin: 1rem 0;
     }
     .success-box {
         background-color: #d4edda;
         padding: 1rem;
         border-radius: 0.5rem;
         border-left: 4px solid #28a745;
+        margin: 1rem 0;
     }
     .warning-box {
         background-color: #fff3cd;
         padding: 1rem;
         border-radius: 0.5rem;
         border-left: 4px solid #ffc107;
+        margin: 1rem 0;
+    }
+    .upload-section {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid #dee2e6;
+        margin: 1rem 0;
+    }
+    .query-section {
+        background-color: #e8f4fd;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid #bee5eb;
+        margin: 1rem 0;
+    }
+    .response-section {
+        background-color: #f0f8f0;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid #c3e6cb;
+        margin: 1rem 0;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -127,65 +158,72 @@ def main():
         - "¿Cuáles son las conclusiones?"
         """)
     
-    # Main content
-    col1, col2 = st.columns([2, 1])
+    # Main content - Vertical Layout
     
-    with col1:
-        st.header("📄 Cargar Documentos")
-        
-        # File upload
-        uploaded_files = st.file_uploader(
-            'Selecciona archivos de texto', 
-            type=['txt'], 
-            accept_multiple_files=True,
-            help="Puedes subir múltiples archivos de texto"
-        )
-        
-        if uploaded_files:
-            st.success(f"✅ {len(uploaded_files)} archivo(s) cargado(s) exitosamente")
-            
-            # Show file previews
-            with st.expander("📖 Vista previa de documentos"):
-                for i, file in enumerate(uploaded_files):
-                    st.subheader(f"Archivo {i+1}: {file.name}")
-                    content = file.read().decode()
-                    st.text_area(f"Contenido de {file.name}", content[:500] + "..." if len(content) > 500 else content, height=150)
-                    file.seek(0)  # Reset file pointer
+    # Section 1: File Upload
+    st.markdown('<div class="upload-section">', unsafe_allow_html=True)
+    st.markdown('<h2 class="section-header">📄 Cargar Documentos</h2>', unsafe_allow_html=True)
     
-    with col2:
-        st.header("❓ Tu Pregunta")
+    # File upload
+    uploaded_files = st.file_uploader(
+        'Selecciona archivos de texto', 
+        type=['txt'], 
+        accept_multiple_files=True,
+        help="Puedes subir múltiples archivos de texto"
+    )
+    
+    if uploaded_files:
+        st.success(f"✅ {len(uploaded_files)} archivo(s) cargado(s) exitosamente")
         
-        # Query input
-        query_text = st.text_area(
-            'Escribe tu pregunta aquí:',
-            placeholder='Ej: ¿Cuál es el tema principal del documento?',
-            height=150,
-            disabled=not uploaded_files
-        )
-        
-        # Generate button
-        if st.button('🚀 Generar Respuesta', disabled=not (uploaded_files and query_text and openai_api_key)):
-            if not openai_api_key.startswith('sk-'):
-                st.error("❌ Por favor ingresa una API key válida de OpenAI")
-            else:
-                with st.spinner('🤖 Procesando tu pregunta...'):
-                    response = generate_response(
-                        uploaded_files, 
-                        openai_api_key, 
-                        query_text,
-                        chunk_size,
-                        chunk_overlap,
-                        temperature
-                    )
-                    
-                    # Display response
-                    st.markdown("### 📝 Respuesta")
-                    st.markdown('<div class="success-box">', unsafe_allow_html=True)
-                    st.write(response)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    
-                    # Add copy button
-                    st.code(response, language=None)
+        # Show file previews
+        with st.expander("📖 Vista previa de documentos"):
+            for i, file in enumerate(uploaded_files):
+                st.subheader(f"Archivo {i+1}: {file.name}")
+                content = file.read().decode()
+                st.text_area(f"Contenido de {file.name}", content[:500] + "..." if len(content) > 500 else content, height=150)
+                file.seek(0)  # Reset file pointer
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Section 2: Query Input
+    st.markdown('<div class="query-section">', unsafe_allow_html=True)
+    st.markdown('<h2 class="section-header">❓ Tu Pregunta</h2>', unsafe_allow_html=True)
+    
+    # Query input
+    query_text = st.text_area(
+        'Escribe tu pregunta aquí:',
+        placeholder='Ej: ¿Cuál es el tema principal del documento?',
+        height=120,
+        disabled=not uploaded_files
+    )
+    
+    # Generate button
+    if st.button('🚀 Generar Respuesta', 
+                 disabled=not (uploaded_files and query_text and openai_api_key),
+                 use_container_width=True):
+        if not openai_api_key.startswith('sk-'):
+            st.error("❌ Por favor ingresa una API key válida de OpenAI")
+        else:
+            with st.spinner('🤖 Procesando tu pregunta...'):
+                response = generate_response(
+                    uploaded_files, 
+                    openai_api_key, 
+                    query_text,
+                    chunk_size,
+                    chunk_overlap,
+                    temperature
+                )
+                
+                # Section 3: Response Display
+                st.markdown('<div class="response-section">', unsafe_allow_html=True)
+                st.markdown('<h2 class="section-header">📝 Respuesta</h2>', unsafe_allow_html=True)
+                st.markdown('<div class="success-box">', unsafe_allow_html=True)
+                st.write(response)
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                # Add copy button
+                st.code(response, language=None)
+                st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Footer
     st.markdown("---")
